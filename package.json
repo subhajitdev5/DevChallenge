@@ -1,0 +1,79 @@
+{
+  "name": "DevChallenge",
+  "version": "1.0.0",
+  "description": "A simple CAP project.",
+  "repository": "<Add your repository here>",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@cap-js/hana": "^1",
+    "@sap-cloud-sdk/connectivity": "^3.25.0",
+    "@sap-cloud-sdk/http-client": "^3.25.0",
+    "@sap-cloud-sdk/resilience": "^3.25.0",
+    "@sap-cloud-sdk/util": "^3.25.0",
+    "@sap/cds": "^8.7.0",
+    "@sap/cds-common-content": "^2.1.0",
+    "@sap/xssec": "^4",
+    "express": "^4",
+    "npm": "^11.1.0"
+  },
+  "devDependencies": {
+    "@cap-js/cds-types": "^0.9.0",
+    "@cap-js/sqlite": "^1.8.0",
+    "@sap/cds-dk": "^8",
+    "axios": "^1.7.9",
+    "chai": "^5.1.2",
+    "chai-as-promised": "^8.0.1",
+    "chai-subset": "^1.6.0",
+    "jest": "^29.7.0"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch-fullstack-dev-challenge": "cds watch --open fullstack-dev-challenge/webapp/index.html?sap-ui-xx-viewCache=false"
+  },
+  "sapux": [
+    "app/fullstack-dev-challenge"
+  ],
+  "cds": {
+    "requires": {
+      "[development]": {
+        "auth": {
+          "kind": "mocked",
+          "users": {
+            "test.manager@tester.sap.com": {
+              "password": "admin",
+              "roles": [
+                "TestManager"
+              ]
+            },
+            "alice": {
+              "roles": [
+                "TestManager"
+              ]
+            }
+          }
+        }
+      },
+      "API_BUSINESS_PARTNER": {
+        "kind": "odata-v2",
+        "model": "srv/external/API_BUSINESS_PARTNER",
+        "credentials": {
+          "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_BUSINESS_PARTNER",
+          "headers": {
+            "APIKey": "tl5G7BM7XM8dtN2Tj5NNBBJieAyGt60f"
+          }
+        }
+      },
+      "destinations": true,
+      "html5-repo": true,
+      "workzone": true,
+      "[production]": {
+        "db": "hana",
+        "auth": "xsuaa"
+      }
+    },
+    "sql": {
+      "native_hana_associations": false
+    }
+  }
+}

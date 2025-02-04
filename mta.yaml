@@ -1,0 +1,168 @@
+_schema-version: 3.3.0
+ID: DevChallenge
+version: 1.0.0
+description: "A simple CAP project."
+parameters:
+  enable-parallel-deployments: true
+  deploy_mode: html5-repo
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+        - mkdir -p resources
+modules:
+  - name: DevChallenge-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+      readiness-health-check-type: http
+      readiness-health-check-http-endpoint: /health
+    build-parameters:
+      builder: npm
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: DevChallenge-destination
+      - name: DevChallenge-db
+      - name: DevChallenge-auth
+
+  - name: DevChallenge-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+    requires:
+      - name: DevChallenge-db
+
+  - name: DevChallenge-app-deployer
+    type: com.sap.application.content
+    path: .
+    requires:
+      - name: DevChallenge-html5-repo-host
+        parameters:
+          content-target: true
+    build-parameters:
+      build-result: resources/
+      requires:
+        - name: DevChallengefullstackdevchallenge
+          artifacts:
+            - fullstack-dev-challenge.zip
+          target-path: resources/
+
+  - name: DevChallengefullstackdevchallenge
+    type: html5
+    path: app/fullstack-dev-challenge
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms:
+        []
+
+  - name: DevChallenge-destinations
+    type: com.sap.application.content
+    requires:
+      - name: DevChallenge-auth
+        parameters:
+          service-key:
+            name: DevChallenge-auth-key
+      - name: DevChallenge-html5-repo-host
+        parameters:
+          service-key:
+            name: DevChallenge-html5-repo-host-key
+      - name: srv-api
+      - name: DevChallenge-destination
+        parameters:
+          content-target: true
+    build-parameters:
+      no-source: true
+    parameters:
+      content:
+        instance:
+          existing_destinations_policy: update
+          destinations:
+            - Name: DevChallenge-html5-repository
+              ServiceInstanceName: DevChallenge-html5-repo-host
+              ServiceKeyName: DevChallenge-html5-repo-host-key
+              sap.cloud.service: DevChallenge
+            - Name: DevChallenge-auth
+              Authentication: OAuth2UserTokenExchange
+              ServiceInstanceName: DevChallenge-auth
+              ServiceKeyName: DevChallenge-auth-key
+              sap.cloud.service: DevChallenge
+
+resources:
+  - name: DevChallenge-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      config:
+      oauth2-configuration:
+        redirect-uris:
+          - https://**.hana.ondemand.com/login/callback
+        role-collections:
+          - description: Create Test
+            name: DevChallenge-${org}-${space}
+            role-template-references:
+              - $XSAPPNAME.TestManager
+        tenant-mode: dedicated
+      service: hana
+      service-plan: hdi-shared
+
+  - name: DevChallenge-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+  - name: DevChallenge-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: DevChallenge-${org}-${space}
+        tenant-mode: dedicated
+
+  - name: DevChallenge-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+      config:
+        HTML5Runtime_enabled: true
+        init_data:
+          instance:
+            existing_destinations_policy: update
+            destinations:
+              - Name: DevChallenge-srv-api
+                URL: ~{srv-api/srv-url}
+                Authentication: NoAuthentication
+                Type: HTTP
+                ProxyType: Internet
+                HTML5.ForwardAuthToken: true
+                HTML5.DynamicDestination: true
+              - Name: ui5
+                URL: https://ui5.sap.com
+                Authentication: NoAuthentication
+                Type: HTTP
+                ProxyType: Internet
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+
+  - name: DevChallengehtml5-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime

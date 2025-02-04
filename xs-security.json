@@ -1,0 +1,19 @@
+{
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.TestManager",
+      "description": "TestManager"
+    }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "TestManager",
+      "description": "generated",
+      "scope-references": [
+        "$XSAPPNAME.TestManager"
+      ],
+      "attribute-references": []
+    }
+  ]
+}

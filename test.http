@@ -1,0 +1,11 @@
+POST http://localhost:4004/odata/v4/cat/Tests(testId='c3a49f8a-a902-4f43-9a8b-f0a777efde9f',IsActiveEntity=true)/assignQuestionsToTest
+Content-Type: application/json
+# Accept: application/json;odata.metadata=minimal
+
+{
+  "questionsCount": 4
+}
+
+###
+http://localhost:4004/odata/v4/cat/Tests(testId=1b4e28ba-2fa1-11d2-883f-0016d3cca427,IsActiveEntity=true)?$select=supplier&$expand=supplier($select=ID,fullName)
+
