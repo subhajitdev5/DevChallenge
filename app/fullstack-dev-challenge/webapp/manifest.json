@@ -28,7 +28,7 @@
     "crossNavigation": {
       "inbounds": {
         "fullstack-dev-challenge-display": {
-          "semanticObject": "fullstack-dev-challenge",
+          "semanticObject": "fullstackdevchallenge",
           "action": "display",
           "title": "{{flpTitle}}",
           "subTitle": "{{flpSubtitle}}",
